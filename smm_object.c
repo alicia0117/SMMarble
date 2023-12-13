@@ -33,15 +33,21 @@ void* smmObj_genNode(char* name, int type, int credit, int energy, int ListType)
         NodePtr->name = name;
         return NodePtr;
     }
+    // smmObj_genNode in grade, name : courseName, type : playerId, credit : credit, energy:grade
+    else if(ListType==3){
+        char* courseName = name; // to avoid confusing
+        int playerId = type;
+        int grade = energy;
+        smmGrade_e* NodePtr = (smmGrade_e*)malloc(sizeof(smmGrade_e));
+        NodePtr->courseName = courseName;
+        NodePtr->playerId = playerId;
+        NodePtr->credit = credit;
+        NodePtr->grade = grade;
+        return NodePtr;
+    }
     else return 0;
 }
 
-
-
-
-const char* smmGradeName[MAX_GRADE] = {
-    "A+", "A0", "A-", "B+", "B0", "B-", "C+", "C0", "C-"
-};
 
 
 //member retrieving
