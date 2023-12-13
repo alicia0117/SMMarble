@@ -36,6 +36,14 @@ typedef struct smmFood_e{
 typedef struct smmFest_e{
     char* name;
 } smmFest_e;
+
+typedef struct smmGrade_e{
+    char* courseName;
+    int playerId;
+    int credit;
+    int grade;
+} smmGrade_e;
+
 /* grade :
     A+,
     A0,
@@ -52,7 +60,7 @@ typedef struct smmFest_e{
 
 //object generation
 void* smmObj_genNode(char* name, int type, int credit, int energy, int ListType);
-
+// smmObj_genNode in grade, name : courseName, type : playerId, credit : credit, energy:grade
 //member retrieving
 
 
