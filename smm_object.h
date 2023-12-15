@@ -22,23 +22,23 @@
 */
 
 typedef struct smmNode_e{
-    char* name;
+    char name[200];
     int type;
     int credit;
     int energy;
 } smmNode_e;
 
 typedef struct smmFood_e{
-    char* name;
+    char name[200];
     int energy;
 } smmFood_e;
 
 typedef struct smmFest_e{
-    char* name;
+    char name[200];
 } smmFest_e;
 
 typedef struct smmGrade_e{
-    char* courseName;
+    char courseName[200];
     int playerId;
     int credit;
     int grade;
