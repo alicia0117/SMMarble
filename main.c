@@ -322,7 +322,7 @@ void printGrades(int player){
 
 void goForward(int player, int step){
     int nextNode = PlayerList[player].nodeNum + step;
-    printf("[TEST] NEXT NODE : %d\n", nextNode);
+    // printf("[TEST] NEXT NODE : %d\n", nextNode);
     if(PlayerList[player].isExperience){
         int randEscapeValue = rand()%MAX_DIE + 1;
         printf("Experience Escape Value : %d\n", randEscapeValue);
