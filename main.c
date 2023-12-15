@@ -55,7 +55,7 @@ Player PlayerList[MAX_PLAYER];
 
 int endflag = 0;
 void generatePlayers(int n); //generate a new player
-// int isGraduated(int n); //check if any player is graduated
+//int isGraduated(int n); //check if any player is graduated
 void printPlayerStatus(int n); //print all player status at the beginning of each turn
 int rolldie(int player);
 void printGrades(int player); //print all the grade history of the player
@@ -71,25 +71,30 @@ void actionNode(int player)
     {
         case 0:
             if(PlayerList[player].energy < nodeInfo->energy) printf("need more Energy T.T\n\n");
-            if(!isGarded(player, nodeInfo->name)){
-                char c;
-                printf("Here Name(Lecture) is %s\n", nodeInfo->name);
-                pritnf("It takes as much energy as %d here. Do you want to take the course? : (Y/N)", nodeInfo->energy);
-                scanf(" %c", &c);
-                if(c == 'Y'){
-                    int randGrade = rand()%MAX_GRADE;
-                    smmGrade_e* gradeInfo= smmObj_genNode(nodeInfo->name, player, nodeInfo->credit, randGrade, 3);
-                    printf("You got %s!!\n\n", smmGradeName[randGrade]);
-                    PlayerList[player].energy -= nodeInfo->energy;
-                    PlayerList[player].credit += nodeInfo->credit;
-                    smmdb_addTail(LISTNO_OFFSET_GRADE, gradeInfo);
+            else{
+                if(!isGraded(player, nodeInfo->name)){
+                    char c;
+                    printf("Here Name(Lecture) is %s\n", nodeInfo->name);
+                    printf("It takes as much energy as %d here. Do you want to take the course? : (Y/N)", nodeInfo->energy);
+                    scanf(" %c", &c);
+                    if(c == 'Y'){
+                        int randGrade = rand()%MAX_GRADE;
+                        smmGrade_e* gradeInfo= smmObj_genNode(nodeInfo->name, player, nodeInfo->credit, randGrade, 3);
+                        printf("You got %s!!\n\n", smmGradeName[randGrade]);
+                        PlayerList[player].energy -= nodeInfo->energy;
+                        PlayerList[player].credit += nodeInfo->credit;
+                        smmdb_addTail(LISTNO_OFFSET_GRADE, gradeInfo);
+                    }
                 }
             }
             break;
         case 1:
-            printf("Congrats! You are in Restaurant, You will get %d energy\n\n", init_energy);
-            PlayerList[player].energy += init_energy;
+        {
+            smmNode_e* nodeInfo = smmdb_getData(0, PlayerList[player].nodeNum);
+            printf("Congrats! You are in Restaurant, You will get %d energy\n", nodeInfo->energy);
+            PlayerList[player].energy += nodeInfo->energy;
             break;
+        }
         case 2:
             printf("Now You are in Lab\n");
             if(PlayerList[player].isExperience){
@@ -97,25 +102,44 @@ void actionNode(int player)
                 이게 실행될 가능성이 있는 지에 관한 의문. 
                 어차피 실험 블럭으로 가버리면, 강제로 실험실로 이동되는데 그 부분은 밑에 있는 case 4에서 실행될 것임.
                 */
-                printf("Good Luck~!\n\n");
+                printf("Good Luck~!\n");
             }
             else{ // 이 부분도 마찬가지로 else가 아니라, 사실상 무조건 아닌가
-                printf("But your experience stat is False. So don't worry~!\n\n");
+                printf("But your experience stat is False. So don't worry~!\n");
             }
             break;
         case 3:
             // 딱 집에 도착하는 경우 (goForward에서 energy를 얻는 경우는, 집을 지나쳐가는 경우임.)
-            printf("Now, here is house. You will get %d energy\n\n");
+            printf("Now, here is house. You will get %d energy\n", init_energy);
             PlayerList[player].energy += init_energy;
             break;
         case 4:
             printf("Oh no... we have to go lab...\n");
-            printf("Now your experience stat will be True. GoodLuck!\n");
-
+            printf("Now your experience stat will be True. GoodLuck!\n");  
+            PlayerList[player].isExperience = 1;
+            PlayerList[player].nodeNum = whereLab;
+            break;
         case 5:
+        {// 변수 선언하기 위해 중괄호로 묶기
+            int randomFood = rand() % food_nr;
+            smmFood_e* randfood = smmdb_getData(LISTNO_FOODCARD, randomFood);
+            printf("Oh, You got a FoodChance!\n");
+            printf("There will be a random Food, and you will get or lose Energy\n");
+            printf("You got food %s, and you will get energy : %d\n", randfood->name, randfood->energy);
+            PlayerList[player].energy += randfood->energy;
+            break;
+        }
         case 6:
+        {// 변수 선언하기 위해 중괄호로 묶기
+            int randomFest = rand()%festival_nr;
+            smmFest_e* randfest = smmdb_getData(LISTNO_FESTCARD, randomFest);
+            printf("Oh, You got a FestivalChance!\n");
+            printf("You have to join a festival.\n");
+            printf("Your Festival Name is, %s Must do it!\n", randfest->name);
+        }
         default:
             break;
+        printf("\n\n\n");
     }
 }
 
@@ -129,7 +153,6 @@ int main(int argc, const char * argv[]) {
     int type;
     int credit;
     int energy;
-    
     
     board_nr = 0;
     food_nr = 0;
@@ -150,13 +173,12 @@ int main(int argc, const char * argv[]) {
     while (0 < fscanf(fp, "%s %d %d %d", name, &type, &credit, &energy)) //read a node parameter set
     {
         //store the parameter set
-        smmNode_e* NodePtr = smmObj_genNode(name, type, credit, energy, 0);
+        void* NodePtr = smmObj_genNode(name, type, credit, energy, 0);
         if(type == 3) init_energy = energy;
-        if(type == 4) whereLab = board_nr;
-        smmdb_addTail(LISTNO_NODE, NodePtr);
+        if(type == 2) whereLab = board_nr;
+        smmdb_addTail(0, NodePtr);
         printf(" => %d. %s (%s), credit:%d, energy:%d\n", board_nr, name, smmNodeName[type], credit, energy);
         board_nr++;
-        
     }
     fclose(fp);
     printf("Total number of board nodes : %i\n", board_nr);
@@ -172,8 +194,8 @@ int main(int argc, const char * argv[]) {
     while (0 < fscanf(fp, "%s %d", name, &energy)) //read a food parameter set
     {
         //store the parameter set
-        smmFood_e* NodePtr = smmObj_genNode(name, 0, 0, energy, 1);
-        smmdb_addTail(LISTNO_FOODCARD, NodePtr);
+        void* NodePtr = smmObj_genNode(name, 0, 0, energy, 1);
+        smmdb_addTail(1, NodePtr);
         printf(" => %d. %s, charge:%d\n", food_nr, name, energy);
         food_nr++;
     }
@@ -191,8 +213,8 @@ int main(int argc, const char * argv[]) {
     while (0 < fscanf(fp, "%s", name)) //read a festival card string
     {
         //store the parameter set
-        smmFest_e* NodePtr = smmObj_genNode(name, 0, 0, 0, 2);
-        smmdb_addTail(LISTNO_FESTCARD, NodePtr);
+        void* NodePtr = smmObj_genNode(name, 0, 0, 0, 2);
+        smmdb_addTail(2, NodePtr);
         printf(" => %d. %s.\n", festival_nr, name);
         festival_nr++;
     }
@@ -222,7 +244,7 @@ int main(int argc, const char * argv[]) {
         int die_result;
         
         //4-1. initial printing
-        printPlayerStatus(turn);
+        printPlayerStatus(players);
         
         //4-2. die rolling (if not in experiment)
         
@@ -231,17 +253,17 @@ int main(int argc, const char * argv[]) {
         //4-3. go forward
         goForward(turn, die_result);
         if(endflag){
+            printf("Congrats!! The player%d Win!!!!\n\n",turn);
             printGrades(turn);
             break;
         }
 		//4-4. take action at the destination node of the board
-        //actionNode();
+        actionNode(turn);
         
         //4-5. next turn
         turn++;
         // if(turn==1) break;
     }
-    
     return 0;
 }
 
@@ -264,17 +286,21 @@ void generatePlayers(int n){
 // }
 
 void printPlayerStatus(int n){
-    smmNode_e *nodeInfo = smmdb_getData(LISTNO_NODE, PlayerList[n].nodeNum);
-    printf("\n\nPlayer%d Name : %s\n", n, PlayerList[n].playerName);
-    printf("Player%d credit : %d\n", n, PlayerList[n].credit);
-    printf("Player%d energy : %d\n", n, PlayerList[n].energy);
-    printf("Player%d is here : %d(%s)\n", n, PlayerList[n].nodeNum, nodeInfo->name);
+    for(int i=0; i<n; i++){
+        smmNode_e *nodeInfo = smmdb_getData(LISTNO_NODE, PlayerList[i].nodeNum);
+        printf("\n\nPlayer%d Name : %s\n", i, PlayerList[i].playerName);
+        printf("Player%d is here : %d(%s)\n", i, PlayerList[i].nodeNum, nodeInfo->name);
+        printf("Player%d Experiement Status : %d\n", i, PlayerList[i].isExperience);
+        printf("Player%d credit : %d\n", i, PlayerList[i].credit);
+        printf("Player%d energy : %d\n", i, PlayerList[i].energy);
+    }
+    printf("\n\n\n");
 }
 
 int rolldie(int player)
 {
     char c;
-    printf(" Press any key to roll a die (press g to see grade): ");
+    printf("Hello, Player%d, Press any key to roll a die (press g to see grade): ", player);
     scanf(" %c", &c);
     
     if (c == 'g')
@@ -296,12 +322,13 @@ void printGrades(int player){
 
 void goForward(int player, int step){
     int nextNode = PlayerList[player].nodeNum + step;
+    printf("[TEST] NEXT NODE : %d\n", nextNode);
     if(PlayerList[player].isExperience){
         int randEscapeValue = rand()%MAX_DIE + 1;
         printf("Experience Escape Value : %d\n", randEscapeValue);
         if(step != randEscapeValue){
             printf("try one more haha!\n");
-            return 0;
+            return ;
         }
         PlayerList[player].isExperience = 0;
     }
@@ -323,6 +350,13 @@ void goForward(int player, int step){
             endflag = 1;
         }
     }
+    else{
+        for(int i=PlayerList[player].nodeNum+1; i <= nextNode; i++){
+            smmNode_e* nodeInfo = smmdb_getData(0, i);
+            printf("%s\n", nodeInfo->name);   
+        }
+    }
+    PlayerList[player].nodeNum = nextNode;
 }
 
 int isGraded(int player, char* lectureName){
