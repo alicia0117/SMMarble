@@ -17,5 +17,7 @@
 #define MAX_DIE                     6
 #define MAX_PLAYER                  10
 
+#define MAX_NODETYPE    7
+#define MAX_GRADE       9
 
 #endif /* smm_common_h */
