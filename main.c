@@ -8,6 +8,7 @@
 
 #include <time.h>
 #include <string.h>
+
 #include "smm_object.h"
 #include "smm_database.h"
 #include "smm_common.h"
@@ -146,6 +147,7 @@ void actionNode(int player)
 
 
 int main(int argc, const char * argv[]) {
+    int i=0;
     int turn=0;
     int players;
     FILE* fp;
@@ -231,7 +233,7 @@ int main(int argc, const char * argv[]) {
     
     printf("Input No. of players (1~%d) : ", MAX_PLAYER);
     scanf("%d", &players);
-    for(int i=0; i<players; i++){
+    for(i=0; i<players; i++){
         printf("Player%d Name : ", i);
         scanf("%s", PlayerList[i].playerName);
     }
@@ -255,6 +257,8 @@ int main(int argc, const char * argv[]) {
         if(endflag){
             printf("Congrats!! The player%d Win!!!!\n\n",turn);
             printGrades(turn);
+            printf("\n\nPress Any Key To Exit\n");
+            getch();
             break;
         }
 		//4-4. take action at the destination node of the board
@@ -268,7 +272,8 @@ int main(int argc, const char * argv[]) {
 }
 
 void generatePlayers(int n){
-    for(int i=0; i<n; i++){
+    int i=0;
+    for(i=0; i<n; i++){
         PlayerList[i].energy = init_energy;
         PlayerList[i].credit = 0;
         PlayerList[i].nodeNum = 0;
@@ -286,7 +291,8 @@ void generatePlayers(int n){
 // }
 
 void printPlayerStatus(int n){
-    for(int i=0; i<n; i++){
+    int i=0;
+    for(i=0; i<n; i++){
         smmNode_e *nodeInfo = smmdb_getData(LISTNO_NODE, PlayerList[i].nodeNum);
         printf("\n\nPlayer%d Name : %s\n", i, PlayerList[i].playerName);
         printf("Player%d is here : %d(%s)\n", i, PlayerList[i].nodeNum, nodeInfo->name);
@@ -310,8 +316,9 @@ int rolldie(int player)
 }
 
 void printGrades(int player){
+    int i=0;
     int gradeLen = smmdb_len(LISTNO_OFFSET_GRADE);
-    for(int i=0; i<gradeLen; i++){
+    for(i=0; i<gradeLen; i++){
         smmGrade_e* checkGrade = smmdb_getData(LISTNO_OFFSET_GRADE, i);
         if(checkGrade->playerId == player){
             printf("%s %s %d\n", checkGrade->courseName, smmGradeName[checkGrade->grade], checkGrade ->credit);
@@ -333,16 +340,17 @@ void goForward(int player, int step){
         PlayerList[player].isExperience = 0;
     }
     if(nextNode >= board_nr){
+        int i;
         nextNode %= board_nr;
         if(nextNode > board_nr){
             printf("You go through house! You will get %d energy\n\n", init_energy);
             PlayerList[player].energy += init_energy; // go through house
         }
-        for(int i=PlayerList[player].nodeNum+1; i<board_nr; i++){
+        for(i=PlayerList[player].nodeNum+1; i<board_nr; i++){
             smmNode_e* nodeInfo = smmdb_getData(0, i);
             printf("%s\n", nodeInfo->name);
         }
-        for(int i=0; i <= nextNode; i++){
+        for(i=0; i <= nextNode; i++){
             smmNode_e* nodeInfo = smmdb_getData(0, i);
             printf("%s\n", nodeInfo->name);            
         }
@@ -351,7 +359,8 @@ void goForward(int player, int step){
         }
     }
     else{
-        for(int i=PlayerList[player].nodeNum+1; i <= nextNode; i++){
+        int i;
+        for(i=PlayerList[player].nodeNum+1; i <= nextNode; i++){
             smmNode_e* nodeInfo = smmdb_getData(0, i);
             printf("%s\n", nodeInfo->name);   
         }
@@ -360,8 +369,9 @@ void goForward(int player, int step){
 }
 
 int isGraded(int player, char* lectureName){
+    int i;
     int gradeLen = smmdb_len(LISTNO_OFFSET_GRADE);
-    for(int i=0; i<gradeLen; i++){
+    for(i=0; i<gradeLen; i++){
         smmGrade_e *checkGrade = smmdb_getData(LISTNO_OFFSET_GRADE, i);
         if(checkGrade->playerId == player){
             if(!strcmp(lectureName, checkGrade->courseName)){
